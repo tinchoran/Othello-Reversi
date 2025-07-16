@@ -1,20 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <locale.h>
+#include <string.h>
 
 #define ROWS 8
 #define COLS  8
 #define blanco 'B'
 #define negro 'N'
 #define vacio 'V'
-#define limpiar_buffer fflush(stdin)
 #ifdef _WIN32
     #define BORRAR_PANTALLA() system("cls")
 #else
     #define BORRAR_PANTALLA() system("clear")
 #endif
 
-
+void limpiarBuffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
 void inicializarTablero(char arr[ROWS][COLS]);
 void mostrarTablero(char arr[ROWS][COLS]);
 void inscribirJugador(char nombre[], char *equipo, int nroJugador, char equipoJugador1);
@@ -80,25 +83,25 @@ void inscribirJugador(char nombre[], char *equipo, int nroJugador, char equipoJu
         BORRAR_PANTALLA();
         printf("\n  Ingrese el nombre del jugador [%d]:  ", nroJugador);
         fgets(nombre, 25, stdin);
-        limpiar_buffer;
+        nombre[strcspn(nombre, "\n")] = 0;
+        //limpiarBuffer();
         if(nroJugador == 1){
                 printf("\n  -----------  Selección su equipo -----------");
                 printf("\n  [1] - BLANCAS \n  [2] - NEGRAS");
                 printf("\n  --------------------------------------------");
                 printf("\n  Ingrese un número:  ");
                 scanf("%d", &equipoElegido);
-                limpiar_buffer;
+                limpiarBuffer();
                 while(equipoElegido != 1 && equipoElegido != 2){
                         printf("\n  Opción inválida. Intente nuevamente:  ");
                         scanf("%d", &equipoElegido);
-                        limpiar_buffer;
+                        limpiarBuffer();
                 }
                 *equipo = (equipoElegido == 1) ? 'B' : 'N';
         } else {
                 //Si es el segundo jugador en inscribirse, verificamos el equipo del primer jugador para asignarle automáticamente equipo
                 *equipo = (equipoJugador1 == 'B') ? 'N' : 'B';
         }
-
 
 }
 
