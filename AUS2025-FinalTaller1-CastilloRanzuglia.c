@@ -8,11 +8,13 @@
 #define blanco 'B'
 #define negro 'N'
 #define vacio 'V'
+#define MAX_MOVS 33      //La cantidad máxima de movimientos que puede llegar a tener un jugador en un turno
 #ifdef _WIN32
     #define BORRAR_PANTALLA() system("cls")
 #else
     #define BORRAR_PANTALLA() system("clear")
 #endif
+
 
 void limpiarBuffer() {
     int c;
@@ -21,6 +23,11 @@ void limpiarBuffer() {
 void inicializarTablero(char arr[ROWS][COLS]);
 void mostrarTablero(char arr[ROWS][COLS]);
 void inscribirJugador(char nombre[], char *equipo, int nroJugador, char equipoJugador1);
+char sortearTurnos();
+void ejecutarJuego(char tablero[ROWS][COLS], char nombreJ1[], char nombreJ2[], char equipoJ1, char equipoJ2, char equipoQueInicia);
+int hayMovimientosValidos(char tablero[ROWS][COLS], char jugador);
+int contarCasillas(char tablero[ROWS][COLS], char equipo);
+void mostrarMovimientos(char tablero[ROWS][COLS], char equipo, int posiblesMovimientos[MAX_MOVS][2]);
 
 int main(){
 
@@ -28,6 +35,7 @@ int main(){
         //Variables para nombres y equipos de cada jugador
         char nombreJ1[25],nombreJ2[25];
         char equipoJ1 = 'V', equipoJ2  = 'V';
+        char inicia;
 
         // Ponemos como semilla para el rand() el id del proceso para que cambia con cada ejecución
         srand(getpid());
@@ -35,12 +43,20 @@ int main(){
         setlocale(LC_ALL, "");
 
         inicializarTablero(tablero);
-        mostrarTablero(tablero);
 
+        //Solicitar nombres y equipos de los jugadores
         inscribirJugador(nombreJ1, &equipoJ1, 1, equipoJ1);
         inscribirJugador(nombreJ2, &equipoJ2, 2, equipoJ1);
-        printf("\nJugador 1: Nombre: %s\nEquipo: %c", nombreJ1, equipoJ1);
-        printf("\nJugador 2: Nombre: %s\nEquipo: %c", nombreJ2, equipoJ2);
+        //Sortear equipo que inicia
+        inicia = sortearTurnos();
+
+
+        printf("\n  Jugador 1\n  Nombre: %s    Equipo: %c", nombreJ1, equipoJ1);
+        printf("\n  Jugador 2\n  Nombre: %s    Equipo: %c", nombreJ2, equipoJ2);
+
+
+        ejecutarJuego(tablero, nombreJ1, nombreJ2, equipoJ1, equipoJ2, inicia);
+
         return 0;
 }
 
@@ -68,10 +84,14 @@ void inicializarTablero(char arr[ROWS][COLS]){
 
 void  mostrarTablero(char arr[ROWS][COLS]){
         int i,j;
+        printf("\n\n  ");
+        printf("  ");
+        printf("x   C0   C1   C2   C3   C4   C5   C6   C7    ");
         for(i=0;i<ROWS;i++){
                 printf("\n\n");
                 for(j=0;j<COLS;j++){
-                        printf("  %c  ", arr[i][j]);
+                        (j==0)?printf("   F%d  ",i):printf("");
+                        (arr[i][j] == blanco || arr[i][j] == negro || arr[i][j] == 'O')?printf("  %c  ", arr[i][j]):printf("  -  ");
                 }
         }
         printf("\n\n");
@@ -97,16 +117,218 @@ void inscribirJugador(char nombre[], char *equipo, int nroJugador, char equipoJu
                         scanf("%d", &equipoElegido);
                         limpiarBuffer();
                 }
-                *equipo = (equipoElegido == 1) ? 'B' : 'N';
+                *equipo = (equipoElegido == 1) ? blanco: negro;
         } else {
                 //Si es el segundo jugador en inscribirse, verificamos el equipo del primer jugador para asignarle automáticamente equipo
-                *equipo = (equipoJugador1 == 'B') ? 'N' : 'B';
+                *equipo = (equipoJugador1 == blanco) ? negro : blanco;
         }
 
 }
 
+char sortearTurnos(){
+        int turno = rand() % 2;
+        if(turno == 0){
+                return turno = blanco;
+        } else {
+                return turno = negro;
+        }
+}
+
+void ejecutarJuego(char tablero[8][8], char nombreJ1[],  char nombreJ2[], char equipoJ1, char equipoJ2, char equipoQueInicia){
+        int gameOver = 0;
+        char turno = equipoQueInicia;
+        int movimiento;  //Momentaneo, quitar despues
+        int posiblesMovimientos[MAX_MOVS][2];
+        while(!gameOver){
+                BORRAR_PANTALLA();
+                if(hayMovimientosValidos(tablero, turno)){
+                        (turno == blanco)?printf("\n               Mueven las BLANCAS\n"):printf("\n               Mueven las NEGRAS\n");
+                        printf("             Hay movimientos válidos");
+                        mostrarMovimientos(tablero, turno, posiblesMovimientos);
+                        printf("\n\n");
+                        scanf("%d", &movimiento); //Momentaneo, quitar despues
+                }
+
+        }
+
+}
+
+int hayMovimientosValidos(char tablero[8][8], char jugador) {
+    char rival = (jugador == 'B') ? 'N' : 'B';
+
+    for (int fila = 0; fila < 8; fila++) {
+        for (int col = 0; col < 8; col++) {
+
+            if (tablero[fila][col] != 'V') continue; // Solo buscamos en casillas vacías
+
+            // ----------- NORTE -----------
+            int f = fila - 1;
+            int c = col;
+            int atrapadas = 0;
+            while (f >= 0 && tablero[f][c] == rival) {
+                atrapadas++;
+                f--;
+            }
+            if (atrapadas > 0 && f >= 0 && tablero[f][c] == jugador) return 1;
+
+            // ----------- SUR -----------
+            f = fila + 1;
+            c = col;
+            atrapadas = 0;
+            while (f < 8 && tablero[f][c] == rival) {
+                atrapadas++;
+                f++;
+            }
+            if (atrapadas > 0 && f < 8 && tablero[f][c] == jugador) return 1;
+
+            // ----------- ESTE -----------
+            f = fila;
+            c = col + 1;
+            atrapadas = 0;
+            while (c < 8 && tablero[f][c] == rival) {
+                atrapadas++;
+                c++;
+            }
+            if (atrapadas > 0 && c < 8 && tablero[f][c] == jugador) return 1;
+
+            // ----------- OESTE -----------
+            f = fila;
+            c = col - 1;
+            atrapadas = 0;
+            while (c >= 0 && tablero[f][c] == rival) {
+                atrapadas++;
+                c--;
+            }
+            if (atrapadas > 0 && c >= 0 && tablero[f][c] == jugador) return 1;
+
+            // ----------- NOROESTE -----------
+            f = fila - 1;
+            c = col - 1;
+            atrapadas = 0;
+            while (f >= 0 && c >= 0 && tablero[f][c] == rival) {
+                atrapadas++;
+                f--;
+                c--;
+            }
+            if (atrapadas > 0 && f >= 0 && c >= 0 && tablero[f][c] == jugador) return 1;
+
+            // ----------- NORESTE -----------
+            f = fila - 1;
+            c = col + 1;
+            atrapadas = 0;
+            while (f >= 0 && c < 8 && tablero[f][c] == rival) {
+                atrapadas++;
+                f--;
+                c++;
+            }
+            if (atrapadas > 0 && f >= 0 && c < 8 && tablero[f][c] == jugador) return 1;
+
+            // ----------- SUROESTE -----------
+            f = fila + 1;
+            c = col - 1;
+            atrapadas = 0;
+            while (f < 8 && c >= 0 && tablero[f][c] == rival) {
+                atrapadas++;
+                f++;
+                c--;
+            }
+            if (atrapadas > 0 && f < 8 && c >= 0 && tablero[f][c] == jugador) return 1;
+
+            // ----------- SURESTE -----------
+            f = fila + 1;
+            c = col + 1;
+            atrapadas = 0;
+            while (f < 8 && c < 8 && tablero[f][c] == rival) {
+                atrapadas++;
+                f++;
+                c++;
+            }
+            if (atrapadas > 0 && f < 8 && c < 8 && tablero[f][c] == jugador) return 1;
+        }
+    }
+
+    return 0; // No hay ningún movimiento válido
+}
+
+
+int contarCasillas(char tablero[ROWS][COLS], char equipo){
+        int cant = 0,i,j;
+        for(i=0;i<ROWS;i++){
+                for(j=0;j<COLS;j++){
+                        if(tablero[i][j] == equipo){
+                                cant++;
+                        }
+                }
+        }
+        return cant;
+}
 
 
 
+void  mostrarMovimientos(char tablero[ROWS][COLS], char equipo, int posiblesMovimientos[MAX_MOVS][2]){
+        char copiaTablero[ROWS][COLS];
+        int i,j;
 
+        //Copiar tablero
+        for(i=0;i<ROWS;i++){for(j=0;j<COLS;j++){copiaTablero[i][j] = tablero[i][j];}};
+
+        //Reseteamos el array de posibles movimientos
+        int contadorDeMovimientos = 0;
+        for(i=0;i<MAX_MOVS;i++){for(j=0;j<2;j++){ posiblesMovimientos[i][j] = -1;}};
+
+        //Vectores de direcciones que nos servirán para movernos por el tablero al analizar cada celda
+        int vf[8] = { 0,-1,-1,-1,0,1,1,1 };   // O = 0   NO=N=NE= -1   E = 0   SE=S=SO = -1
+        int vc[8] = {-1,-1,0,1,1,1,0,-1};   // O=NO= -1  N=0   NE=E=1   SE=1 S=0 SO= -1
+        int d;
+        int fila=0, columna=0, atrapadas = 0;
+        char rival = (equipo == blanco)?negro:blanco;
+
+
+        for(i=0;i<ROWS;i++){
+                for(j=0;j<COLS;j++){
+                        //Recorremos todas las celdas del tablero
+
+                        //Solo nos sirven las celdas vacías
+                        if(tablero[i][j] == vacio){
+
+                                for(d=0;d<8;d++){
+                                        //Una vez confirmado que la celda es vacía, analizamos en todas las direcciones
+                                        //Como las direcciones son 8 (ONO,N,NE,E,SE,S,SO), ejecutamos 8 ciclos, uno por cada índice de los vectores de direcciones
+
+                                        //Al principio de cada ciclo...
+                                        // 1 - Sacamos las coordenadas de una celda contigua a la que analizamos usando los vectores de direcciones
+                                        fila = i + vf[d];
+                                        columna = j + vc[d];
+                                        // 2 - Reiniciamos las fichas atrapadas para evitar conflictos
+                                        atrapadas = 0;
+
+                                        //Si el tablero lo permite y la celda en la que estamos parados es del rival nos seguimos moviendo utilizando los vectores de direcciones
+                                        // hasta encontrar una ficha del equipo con turno actual o hasta que se termine el tablero
+                                        //Arreglar aqui posibles desbordes, solo analiza con 0 y no con 7.Encontrar la solución
+                                        while ((fila >= 0 && fila <= 7 ) && ( columna >= 0 && columna <= 7) && tablero[fila][columna] == rival) {
+                                                atrapadas++;
+                                                fila = fila + vf[d];
+                                                columna = columna + vc[d];
+                                        }
+                                        if (atrapadas > 0 && fila >= 0 && fila < ROWS && columna >= 0 && columna < COLS && tablero[fila][columna] == equipo) {
+                                                copiaTablero[i][j] = 'O';
+                                                posiblesMovimientos[contadorDeMovimientos][0] = i;
+                                                posiblesMovimientos[contadorDeMovimientos][1] = j;
+                                                contadorDeMovimientos++;
+                                        };
+                                }
+                        }
+                }
+        }
+
+        mostrarTablero(copiaTablero);
+        i=0;
+        printf("                   Movimientos\n");
+        while(i < MAX_MOVS && posiblesMovimientos[i][0] != -1){
+                (i % 5  == 0)?printf("\n "):printf("");
+                printf(" (%d)F%dC%d", i, posiblesMovimientos[i][0], posiblesMovimientos[i][1]);
+                i++;
+        }
+
+}
 
