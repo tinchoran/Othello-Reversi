@@ -3,6 +3,7 @@
 #include <locale.h>
 #include <string.h>
 
+
 #define ROWS 8
 #define COLS  8
 #define blanco 'B'
@@ -28,6 +29,8 @@ void ejecutarJuego(char tablero[ROWS][COLS], char nombreJ1[], char nombreJ2[], c
 int hayMovimientosValidos(char tablero[ROWS][COLS], char jugador);
 int contarCasillas(char tablero[ROWS][COLS], char equipo);
 void mostrarMovimientos(char tablero[ROWS][COLS], char equipo, int posiblesMovimientos[MAX_MOVS][2]);
+int validarMovimiento(int movimiento, int posiblesMovimientos[MAX_MOVS][2]);
+void ejecutarMovimiento(int movFila, int movColumna, int posiblesMovimientos[MAX_MOVS][2], char tablero[ROWS][COLS], char equipo);
 
 int main(){
 
@@ -91,7 +94,7 @@ void  mostrarTablero(char arr[ROWS][COLS]){
                 printf("\n\n");
                 for(j=0;j<COLS;j++){
                         (j==0)?printf("   F%d  ",i):printf("");
-                        (arr[i][j] == blanco || arr[i][j] == negro || arr[i][j] == 'O')?printf("  %c  ", arr[i][j]):printf("  -  ");
+                        (arr[i][j] == 'V')?printf("  -  ", arr[i][j]):printf("  %c  ", arr[i][j]);
                 }
         }
         printf("\n\n");
@@ -137,7 +140,8 @@ char sortearTurnos(){
 void ejecutarJuego(char tablero[8][8], char nombreJ1[],  char nombreJ2[], char equipoJ1, char equipoJ2, char equipoQueInicia){
         int gameOver = 0;
         char turno = equipoQueInicia;
-        int movimiento;  //Momentaneo, quitar despues
+        int movimiento;
+        int movFila,movCol;
         int posiblesMovimientos[MAX_MOVS][2];
         while(!gameOver){
                 BORRAR_PANTALLA();
@@ -145,8 +149,21 @@ void ejecutarJuego(char tablero[8][8], char nombreJ1[],  char nombreJ2[], char e
                         (turno == blanco)?printf("\n               Mueven las BLANCAS\n"):printf("\n               Mueven las NEGRAS\n");
                         printf("             Hay movimientos válidos");
                         mostrarMovimientos(tablero, turno, posiblesMovimientos);
-                        printf("\n\n");
-                        scanf("%d", &movimiento); //Momentaneo, quitar despues
+
+                        //Solicitar y validar movimiento del usuario
+                        printf("\n\n  Ingrese el número de movimiento: ");
+                        scanf("%d", &movimiento);
+                        limpiarBuffer();
+                        while(!validarMovimiento(movimiento, posiblesMovimientos)){
+                                printf("\n  Opción Inválida. Reintente: ");
+                                scanf("%d", &movimiento);
+                                limpiarBuffer();
+                        }
+                        movFila = posiblesMovimientos[movimiento][0];
+                        movCol = posiblesMovimientos[movimiento][1];
+                        ejecutarMovimiento(movFila, movCol, posiblesMovimientos, tablero, turno);
+
+                        turno = (turno == blanco)?negro:blanco;
                 }
 
         }
@@ -304,14 +321,13 @@ void  mostrarMovimientos(char tablero[ROWS][COLS], char equipo, int posiblesMovi
 
                                         //Si el tablero lo permite y la celda en la que estamos parados es del rival nos seguimos moviendo utilizando los vectores de direcciones
                                         // hasta encontrar una ficha del equipo con turno actual o hasta que se termine el tablero
-                                        //Arreglar aqui posibles desbordes, solo analiza con 0 y no con 7.Encontrar la solución
                                         while ((fila >= 0 && fila <= 7 ) && ( columna >= 0 && columna <= 7) && tablero[fila][columna] == rival) {
                                                 atrapadas++;
                                                 fila = fila + vf[d];
                                                 columna = columna + vc[d];
                                         }
                                         if (atrapadas > 0 && fila >= 0 && fila < ROWS && columna >= 0 && columna < COLS && tablero[fila][columna] == equipo) {
-                                                copiaTablero[i][j] = 'O';
+                                                copiaTablero[i][j] = 'x';
                                                 posiblesMovimientos[contadorDeMovimientos][0] = i;
                                                 posiblesMovimientos[contadorDeMovimientos][1] = j;
                                                 contadorDeMovimientos++;
@@ -332,3 +348,50 @@ void  mostrarMovimientos(char tablero[ROWS][COLS], char equipo, int posiblesMovi
 
 }
 
+
+int validarMovimiento(int movimiento,int posiblesMovimientos[MAX_MOVS][2]){
+        int i=0,numeroMayorMov=-1;
+        while(i < MAX_MOVS){
+                if(posiblesMovimientos[i][0] != -1){
+                        numeroMayorMov++;
+                }
+                i++;
+        }
+        if(movimiento >= 0 && movimiento <= numeroMayorMov){
+                return 1;
+        } else {
+                return 0;
+        }
+}
+
+void ejecutarMovimiento(int movFila, int movColumna, int posiblesMovimientos[MAX_MOVS][2], char tablero[ROWS][COLS], char equipo){
+        //Vectores de direcciones que nos servirán para movernos por el tablero al analizar cada celda
+        int vf[8] = { 0,-1,-1,-1,0,1,1,1 };   // O = 0   NO=N=NE= -1   E = 0   SE=S=SO = -1
+        int vc[8] = {-1,-1,0,1,1,1,0,-1};   // O=NO= -1  N=0   NE=E=1   SE=1 S=0 SO= -1
+        int i;
+        int fila, columna, atrapadas = 0;
+        char rival = (equipo == blanco)?negro:blanco;
+        for(i=0;i<8;i++){
+                atrapadas = 0;
+                fila = movFila + vf[i];
+                columna = movColumna + vc[i];
+                while ((fila >= 0 && fila <= 7 ) && ( columna >= 0 && columna <= 7) && tablero[fila][columna] == rival) {
+                        atrapadas++;
+                        fila+=vf[i];
+                        columna+=vc[i];
+                }
+                if (atrapadas > 0 && fila >= 0 && fila < ROWS && columna >= 0 && columna < COLS && tablero[fila][columna] == equipo) {
+                        tablero[movFila][movColumna] = equipo;
+
+                        while(atrapadas >= 0){
+                                tablero[fila][columna] = equipo;
+                                fila-= vf[i];
+                                columna-=vc[i];
+                                atrapadas--;
+                        }
+                };
+
+        }
+
+
+}
