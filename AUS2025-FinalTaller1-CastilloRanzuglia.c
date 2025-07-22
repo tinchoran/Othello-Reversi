@@ -366,6 +366,7 @@ void  mostrarMovimientos(char tablero[ROWS][COLS], char equipo, int posiblesMovi
                                                 posiblesMovimientos[contadorDeMovimientos][0] = i;
                                                 posiblesMovimientos[contadorDeMovimientos][1] = j;
                                                 contadorDeMovimientos++;
+                                                break;
                                         };
                                 }
                         }
