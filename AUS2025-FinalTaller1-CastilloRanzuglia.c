@@ -54,10 +54,6 @@ int main(){
         inicia = sortearTurnos();
 
 
-        printf("\n  Jugador 1\n  Nombre: %s    Equipo: %c", nombreJ1, equipoJ1);
-        printf("\n  Jugador 2\n  Nombre: %s    Equipo: %c", nombreJ2, equipoJ2);
-
-
         ejecutarJuego(tablero, nombreJ1, nombreJ2, equipoJ1, equipoJ2, inicia);
 
         return 0;
@@ -130,16 +126,15 @@ void inscribirJugador(char nombre[], char *equipo, int nroJugador, char equipoJu
 
 char sortearTurnos(){
         int turno = rand() % 2;
-        if(turno == 0){
-                return turno = blanco;
-        } else {
-                return turno = negro;
-        }
+        return (turno == 0)?blanco:negro;
 }
 
 void ejecutarJuego(char tablero[8][8], char nombreJ1[],  char nombreJ2[], char equipoJ1, char equipoJ2, char equipoQueInicia){
         int gameOver = 0;
         char turno = equipoQueInicia;
+        char rival = (turno == blanco)?negro:blanco;
+        int cantFichasTurno  = 0, cantFichasRival = 0;
+        char ganador, perdedor;
         int movimiento;
         int movFila,movCol;
         int posiblesMovimientos[MAX_MOVS][2];
@@ -162,8 +157,48 @@ void ejecutarJuego(char tablero[8][8], char nombreJ1[],  char nombreJ2[], char e
                         movFila = posiblesMovimientos[movimiento][0];
                         movCol = posiblesMovimientos[movimiento][1];
                         ejecutarMovimiento(movFila, movCol, posiblesMovimientos, tablero, turno);
+                } else {
+                        printf("\n\n   El jugador %c no tiene movimientos válidos");
+                        printf("\n   Presione ENTER para pasar el turno");
+                        getchar();
+                }
+
+
+                if( !(hayMovimientosValidos(tablero, turno)) && !(hayMovimientosValidos(tablero, rival)) ){
+                        cantFichasTurno = contarCasillas(tablero, turno);
+                        cantFichasRival = contarCasillas(tablero, rival);
+                        BORRAR_PANTALLA();
+                        printf("\n\n   ");
+                        if(cantFichasTurno == cantFichasRival){
+                                printf("Ambos equipos tienen %d fichas", cantFichasTurno);
+                                printf("\n   El resultado es un EMPATE");
+                        } else if (cantFichasTurno > cantFichasRival){
+                                ganador = turno;
+                                perdedor  = rival;
+                                printf("Cantidad de fichas del equipo BLANCO: %d", (ganador == blanco)?cantFichasTurno:cantFichasRival);
+                                printf("\n   ");
+                                printf("Cantidad de fichas del equipo NEGRO: %d", (ganador == blanco)?cantFichasRival:cantFichasTurno);
+                                printf("'n   ");
+                                printf("¡El ganador es %s!", (ganador == equipoJ1)?nombreJ1:nombreJ2);
+                        } else if  (cantFichasRival > cantFichasTurno){
+                                ganador = rival;
+                                perdedor = turno;
+                                printf("Cantidad de fichas del equipo BLANCO: %d", (ganador == blanco)?cantFichasRival:cantFichasTurno);
+                                printf("\n   ");
+                                printf("Cantidad de fichas del equipo NEGRO: %d", (ganador == blanco)?cantFichasTurno:cantFichasRival);
+                                printf("\n   ");
+                                printf("¡El ganador es %s!", (ganador == equipoJ1)?nombreJ1:nombreJ2);
+                        }
+
+                        printf("\n\n   Presione ENTER para salir...");
+                        getchar();
+                        gameOver = 1;
+
+                } else {
 
                         turno = (turno == blanco)?negro:blanco;
+                        rival = (turno == blanco)?negro:blanco;
+
                 }
 
         }
