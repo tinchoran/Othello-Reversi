@@ -39,22 +39,27 @@ int main(){
         char nombreJ1[25],nombreJ2[25];
         char equipoJ1 = 'V', equipoJ2  = 'V';
         char inicia;
-
+        char opcion;
         // Ponemos como semilla para el rand() el id del proceso para que cambia con cada ejecución
         srand(getpid());
         // Configuramos los locales para la región del usuario. En este caso el entorno del usuario es español: permite utilizar tildes.
         setlocale(LC_ALL, "");
 
-        inicializarTablero(tablero);
-
         //Solicitar nombres y equipos de los jugadores
         inscribirJugador(nombreJ1, &equipoJ1, 1, equipoJ1);
         inscribirJugador(nombreJ2, &equipoJ2, 2, equipoJ1);
-        //Sortear equipo que inicia
-        inicia = sortearTurnos();
 
+        do{
+                inicializarTablero(tablero);
+                //Sortear equipo que inicia
+                inicia = sortearTurnos();
 
-        ejecutarJuego(tablero, nombreJ1, nombreJ2, equipoJ1, equipoJ2, inicia);
+                ejecutarJuego(tablero, nombreJ1, nombreJ2, equipoJ1, equipoJ2, inicia);
+                printf("\n\n\n   ¿Desea jugar otra vez con los mismos jugadores? (s/n): ");
+                opcion = getchar();
+                limpiarBuffer();
+        } while (opcion == 'S' || opcion == 's');
+
 
         return 0;
 }
@@ -100,19 +105,19 @@ void  mostrarTablero(char arr[ROWS][COLS]){
 void inscribirJugador(char nombre[], char *equipo, int nroJugador, char equipoJugador1){
         int equipoElegido;
         BORRAR_PANTALLA();
-        printf("\n  Ingrese el nombre del jugador [%d]:  ", nroJugador);
+        printf("\n   Ingrese el nombre del jugador [%d]: ", nroJugador);
         fgets(nombre, 25, stdin);
         nombre[strcspn(nombre, "\n")] = 0;
         //limpiarBuffer();
         if(nroJugador == 1){
-                printf("\n  -----------  Selección su equipo -----------");
-                printf("\n  [1] - BLANCAS \n  [2] - NEGRAS");
-                printf("\n  --------------------------------------------");
-                printf("\n  Ingrese un número:  ");
+                printf("\n   -----------  Selección su equipo -----------");
+                printf("\n   [1] - BLANCAS \n   [2] - NEGRAS");
+                printf("\n   --------------------------------------------");
+                printf("\n    Ingrese un número: ");
                 scanf("%d", &equipoElegido);
                 limpiarBuffer();
                 while(equipoElegido != 1 && equipoElegido != 2){
-                        printf("\n  Opción inválida. Intente nuevamente:  ");
+                        printf("\n   Opción inválida. Intente nuevamente: ");
                         scanf("%d", &equipoElegido);
                         limpiarBuffer();
                 }
@@ -138,8 +143,11 @@ void ejecutarJuego(char tablero[8][8], char nombreJ1[],  char nombreJ2[], char e
         int movimiento;
         int movFila,movCol;
         int posiblesMovimientos[MAX_MOVS][2];
+
         while(!gameOver){
+
                 BORRAR_PANTALLA();
+
                 if(hayMovimientosValidos(tablero, turno)){
                         (turno == blanco)?printf("\n               Mueven las BLANCAS\n"):printf("\n               Mueven las NEGRAS\n");
                         printf("             Hay movimientos válidos");
@@ -158,9 +166,11 @@ void ejecutarJuego(char tablero[8][8], char nombreJ1[],  char nombreJ2[], char e
                         movCol = posiblesMovimientos[movimiento][1];
                         ejecutarMovimiento(movFila, movCol, posiblesMovimientos, tablero, turno);
                 } else {
-                        printf("\n\n   El jugador %c no tiene movimientos válidos");
+                        mostrarTablero(tablero);
+                        printf("\n\n   Las %s no tiene movimientos válidos", (turno == blanco)?"BLANCAS":"NEGRAS");
                         printf("\n   Presione ENTER para pasar el turno");
                         getchar();
+                        limpiarBuffer();
                 }
 
 
@@ -168,6 +178,8 @@ void ejecutarJuego(char tablero[8][8], char nombreJ1[],  char nombreJ2[], char e
                         cantFichasTurno = contarCasillas(tablero, turno);
                         cantFichasRival = contarCasillas(tablero, rival);
                         BORRAR_PANTALLA();
+
+                        mostrarTablero(tablero);
                         printf("\n\n   ");
                         if(cantFichasTurno == cantFichasRival){
                                 printf("Ambos equipos tienen %d fichas", cantFichasTurno);
@@ -178,20 +190,18 @@ void ejecutarJuego(char tablero[8][8], char nombreJ1[],  char nombreJ2[], char e
                                 printf("Cantidad de fichas del equipo BLANCO: %d", (ganador == blanco)?cantFichasTurno:cantFichasRival);
                                 printf("\n   ");
                                 printf("Cantidad de fichas del equipo NEGRO: %d", (ganador == blanco)?cantFichasRival:cantFichasTurno);
-                                printf("'n   ");
+                                printf("\n   ");
                                 printf("¡El ganador es %s!", (ganador == equipoJ1)?nombreJ1:nombreJ2);
                         } else if  (cantFichasRival > cantFichasTurno){
                                 ganador = rival;
                                 perdedor = turno;
                                 printf("Cantidad de fichas del equipo BLANCO: %d", (ganador == blanco)?cantFichasRival:cantFichasTurno);
                                 printf("\n   ");
-                                printf("Cantidad de fichas del equipo NEGRO: %d", (ganador == blanco)?cantFichasTurno:cantFichasRival);
-                                printf("\n   ");
-                                printf("¡El ganador es %s!", (ganador == equipoJ1)?nombreJ1:nombreJ2);
+                                printf("Cantidad de fichas del equipo NEGRO:  %d", (ganador == blanco)?cantFichasTurno:cantFichasRival);
+                                printf("\n\n   ");
+                                printf("         ¡El ganador es %s!", (ganador == equipoJ1)?nombreJ1:nombreJ2);
                         }
 
-                        printf("\n\n   Presione ENTER para salir...");
-                        getchar();
                         gameOver = 1;
 
                 } else {
@@ -366,7 +376,8 @@ void  mostrarMovimientos(char tablero[ROWS][COLS], char equipo, int posiblesMovi
                                                 posiblesMovimientos[contadorDeMovimientos][0] = i;
                                                 posiblesMovimientos[contadorDeMovimientos][1] = j;
                                                 contadorDeMovimientos++;
-                                                break;
+
+                                                break; //Salimos del for para no repetir el movimiento. Si no está este break por cada camino distinto que encuentre con  esta celda creará un movimiento, entonces habrá movimientos repetidos
                                         };
                                 }
                         }
