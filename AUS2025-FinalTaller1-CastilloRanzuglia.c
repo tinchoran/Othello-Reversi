@@ -12,11 +12,20 @@
 #define MAX_MOVS 33      //La cantidad máxima de movimientos que puede llegar a tener un jugador en un turno
 #ifdef _WIN32
     #define BORRAR_PANTALLA() system("cls")
+    #include <windows.h>
 #else
     #define BORRAR_PANTALLA() system("clear")
+    #include <unistd.h>
 #endif
 
 
+void esperar_segundos(int segundos){
+#ifdef _WIN32
+        Sleep(segundos *  1000);
+#else
+        sleep(segundos);
+#endif
+}
 void limpiarBuffer() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
@@ -33,7 +42,7 @@ int validarMovimiento(int movimiento, int posiblesMovimientos[MAX_MOVS][2]);
 void ejecutarMovimiento(int movFila, int movColumna, int posiblesMovimientos[MAX_MOVS][2], char tablero[ROWS][COLS], char equipo);
 
 int main(){
-
+        int i ;
         char tablero[ROWS][COLS];
         //Variables para nombres y equipos de cada jugador
         char nombreJ1[25],nombreJ2[25];
@@ -50,12 +59,23 @@ int main(){
         inscribirJugador(nombreJ2, &equipoJ2, 2, equipoJ1);
 
         do{
+                BORRAR_PANTALLA();
 
                 inicializarTablero(tablero);
                 //Sortear equipo que inicia
                 inicia = sortearTurnos();
 
 
+                for(i=7;i>=1;i--){
+                        BORRAR_PANTALLA();
+                        printf("\n\n   -----------------   Jugadores   -----------------");
+                        printf("\n\n   [1] %-25s   %s  ", nombreJ1, (equipoJ1 == blanco)?"BLANCAS":"NEGRAS");
+                        printf("\n\n   [2] %-25s   %s  ", nombreJ2, (equipoJ2 == blanco)?"BLANCAS":"NEGRAS");
+                        printf("\n\n   -------------------------------------------------");
+                        printf("\n\n   Empiezan moviendo las %s", (inicia==blanco)?"BLANCAS":"NEGRAS");
+                        printf("\n\n   El juego empieza en %d segundos", i);
+                        esperar_segundos(1);
+                }
 
                 ejecutarJuego(tablero, nombreJ1, nombreJ2, equipoJ1, equipoJ2, inicia);
                 printf("\n\n\n   ¿Desea jugar otra vez con los mismos jugadores? (s/n): ");
@@ -110,8 +130,10 @@ void inscribirJugador(char nombre[], char *equipo, int nroJugador, char equipoJu
         int equipoElegido;
         printf("\n\n   ---------------  JUGADOR %d   ---------------", nroJugador);
         printf("\n\n   Nombre: ", nroJugador);
-        fgets(nombre, 25, stdin);
+        fgets(nombre, 50, stdin);
         nombre[strcspn(nombre, "\n")] = 0;
+
+
         //limpiarBuffer();
         if(nroJugador == 1){
                 printf("\n   -----------  Selección su equipo -----------");
