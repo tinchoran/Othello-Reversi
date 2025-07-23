@@ -123,7 +123,7 @@ void mostrarBienvenida() {
 void inscribirJugador(char nombre[], char *equipo, int nroJugador, char equipoJugador1){
         int equipoElegido;
         printf("\n\n   ---------------  JUGADOR %d   ---------------", nroJugador);
-        printf("\n\n   Nombre: ", nroJugador);
+        printf("\n\n   Nombre: ");
         fgets(nombre, 25, stdin);
         nombre[strcspn(nombre, "\n")] = 0;
 
@@ -164,7 +164,7 @@ void  mostrarTablero(char arr[ROWS][COLS]){
                 printf("\n\n");
                 for(j=0;j<COLS;j++){
                         (j==0)?printf("   F%d  ",i):printf("");
-                        (arr[i][j] == 'V')?printf("  -  ", arr[i][j]):printf("  %c  ", arr[i][j]);
+                        (arr[i][j] == 'V')?printf("  -  "):printf("  %c  ", arr[i][j]);
                 }
         }
         printf("\n\n");
