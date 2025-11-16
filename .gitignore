@@ -1,3 +1,26 @@
+# Compilación en Linux
+*.o
+*.out
+*.so
+*.a
+*.lo
+*.la
 
-AUS2025-FinalTaller1-CastilloRanzuglia.exe
-AUS2025-FinalTaller1-CastilloRanzuglia.o
+# Compilación en Windows
+*.exe
+*.dll
+*.obj
+*.lib
+*.pdb
+
+# Archivos generados por el compilador
+*.elf
+*.map
+
+
+# Visual Studio Code
+.vscode/
+
+
+
+
